@@ -1,0 +1,14 @@
+{application, adbt,
+ [
+  {description, "ActorDB thrift server"},
+  {vsn, "1"},
+  {modules, [
+             adbt
+            ]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
