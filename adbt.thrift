@@ -27,18 +27,16 @@ union Val {
 struct ReadResult
 {
   1: required bool success,
-  2: optional string error,
-  3: optional bool hasMore, // not used yet
-  4: optional list<string> columns,
-  5: optional list<map<string,Val>> rows
+  2: required bool hasMore, // not used yet
+  3: required list<string> columns,
+  4: required list<map<string,Val>> rows
 }
 
 struct WriteResult
 {
-  1: required bool success,
-  2: optional string error,
-  3: optional i64 lastChangeRowid,
-  4: optional i64 rowsChanged
+  1: required string error,
+  2: required i64 lastChangeRowid,
+  3: required i64 rowsChanged
 }
 
 struct LoginResult

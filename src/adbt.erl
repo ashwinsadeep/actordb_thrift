@@ -17,29 +17,30 @@ handle_error(_Func,_Reason) ->
 
 % Process dictionary:
 % {pb,State} - backpressure state
-handle_function(login,[_U,_P]) ->
+handle_function(login,{_U,_P}) ->
 	State = actordb_backpressure:start_caller(),
 	put(bp,State),
-	ok;
-handle_function(exec_single,[Actor,Type,Sql,Flags]) ->
+	Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
+	{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}};
+handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,Actor,Type,Flags,Sql) of
+	case catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql) of
 		X ->
 			exec_res(Sql,X)
 	end;
-handle_function(exec_multi,[Actors,Type,Sql,Flags]) ->
+handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,Actors,Type,Flags,Sql) of
+	case catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql) of
 		X ->
 			exec_res(Sql,X)
 	end;
-handle_function(exec_all,[Type,Sql,Flags]) ->
+handle_function(exec_all,{Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,$*,Type,Flags,Sql) of
+	case catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql) of
 		X ->
 			exec_res(Sql,X)
 	end;
-handle_function(exec_sql,[Sql]) ->
+handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
 	case catch actordb:exec_bp(Bp,Sql) of
 		X ->
@@ -48,13 +49,29 @@ handle_function(exec_sql,[Sql]) ->
 handle_function(protocol_version,[]) ->
 	?ADBT_VERSION.
 
+flags([H|T]) ->
+	actordb_sqlparse:check_flags(H,[])++flags(T);
+flags([]) ->
+	[].
 
-exec_res(_Sql,{ok,[{columns,Cols1},{rows,Rows1}]}) ->
+val(V) when is_binary(V); is_list(V) ->
+	#'Val'{text = V};
+val(V) when is_integer(V) ->
+	#'Val'{bigint = V};
+val(V) when is_float(V) ->
+	#'Val'{real = V};
+val(undefined) ->
+	#'Val'{isnull = 1};
+val(V) when V == true; V == false ->
+	#'Val'{bval = V}.
+
+
+exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	Cols = tuple_to_list(Cols1),
-	Rows = [lists:zip(Cols,tuple_to_list(R)) || R <- Rows1],
-	#'ReadResult'{success = true, columns = Cols, rows = Rows};
-exec_res(_Sql,{ok,{changes,LastId,NChanged}}) ->
-	#'WriteResult'{success = true, lastChangeRowid = LastId, rowsChanged = NChanged};
+	Rows = [maps:from_list(lists:zip(Cols,[val(Val) || Val <- tuple_to_list(R)])) || R <- Rows1],
+	{reply,#'Result'{read = #'ReadResult'{columns = Cols, rows = Rows}}};
+exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
+	{reply,#'Result'{write = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
 exec_res(Sql,{'EXIT',Exc}) ->
 	lager:error("Query exception: ~p for sql: ~p",[Exc,Sql]),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
@@ -63,7 +80,9 @@ exec_res(_Sql,{error,empty_actor_name}) ->
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,Err}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = atom_to_list(Err)}).
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = atom_to_list(Err)});
+exec_res(_Sql,{ok,{error,E}}) ->
+	exec_res(_Sql,{error,E}).
 
 backpressure() ->
 	Bp = get(bp),

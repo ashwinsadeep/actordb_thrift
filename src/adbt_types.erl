@@ -22,17 +22,15 @@ struct_info('Val') ->
 
 struct_info('ReadResult') ->
   {struct, [{1, bool},
-          {2, string},
-          {3, bool},
-          {4, {list, string}},
-          {5, {list, {map, string, {struct, {'adbt_types', 'Val'}}}}}]}
+          {2, bool},
+          {3, {list, string}},
+          {4, {list, {map, string, {struct, {'adbt_types', 'Val'}}}}}]}
 ;
 
 struct_info('WriteResult') ->
-  {struct, [{1, bool},
-          {2, string},
-          {3, i64},
-          {4, i64}]}
+  {struct, [{1, string},
+          {2, i64},
+          {3, i64}]}
 ;
 
 struct_info('LoginResult') ->
@@ -66,17 +64,15 @@ struct_info_ext('Val') ->
 
 struct_info_ext('ReadResult') ->
   {struct, [{1, required, bool, 'success', undefined},
-          {2, optional, string, 'error', undefined},
-          {3, optional, bool, 'hasMore', undefined},
-          {4, optional, {list, string}, 'columns', []},
-          {5, optional, {list, {map, string, {struct, {'adbt_types', 'Val'}}}}, 'rows', []}]}
+          {2, required, bool, 'hasMore', undefined},
+          {3, required, {list, string}, 'columns', []},
+          {4, required, {list, {map, string, {struct, {'adbt_types', 'Val'}}}}, 'rows', []}]}
 ;
 
 struct_info_ext('WriteResult') ->
-  {struct, [{1, required, bool, 'success', undefined},
-          {2, optional, string, 'error', undefined},
-          {3, optional, i64, 'lastChangeRowid', undefined},
-          {4, optional, i64, 'rowsChanged', undefined}]}
+  {struct, [{1, required, string, 'error', undefined},
+          {2, required, i64, 'lastChangeRowid', undefined},
+          {3, required, i64, 'rowsChanged', undefined}]}
 ;
 
 struct_info_ext('LoginResult') ->
