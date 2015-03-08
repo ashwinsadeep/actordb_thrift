@@ -57,9 +57,10 @@ enum ErrorCode {
   NotLoggedIn = 1,
   EmptyActorName = 2,
   InvalidActorName = 3, // invalid characters
-  NotPermitted = 4,     // accessing actor that user does not have permission for
-  SqlError = 5,
-  Error = 6
+  InvalidType = 4,      // invalid characters
+  NotPermitted = 5,     // accessing actor that user does not have permission for
+  SqlError = 6,
+  Error = 7             // unknown error
 }
 
 exception InvalidRequestException {

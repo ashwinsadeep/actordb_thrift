@@ -24,30 +24,18 @@ handle_function(login,{_U,_P}) ->
 	{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}};
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql) of
-		X ->
-			exec_res(Sql,X)
-	end;
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql) of
-		X ->
-			exec_res(Sql,X)
-	end;
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
 handle_function(exec_all,{Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql) of
-		X ->
-			exec_res(Sql,X)
-	end;
+	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql)));
 handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
-	case catch actordb:exec_bp(Bp,Sql) of
-		X ->
-			exec_res(Sql,X)
-	end;
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql)));
 handle_function(protocol_version,[]) ->
-	?ADBT_VERSION.
+	{reply,?ADBT_VERSION}.
 
 flags([H|T]) ->
 	actordb_sqlparse:check_flags(H,[])++flags(T);
@@ -77,6 +65,8 @@ exec_res(Sql,{'EXIT',Exc}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
 exec_res(_Sql,{error,empty_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_EMPTYACTORNAME, info = ""});
+exec_res(_Sql,{unknown_actor_type,Type}) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = [Type," is not a valid type."]});
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,Err}) ->
