@@ -21,17 +21,15 @@ union Val {
 
 struct ReadResult
 {
-  1: required bool success,
-  2: required bool hasMore, // not used yet
-  3: required list<string> columns,
-  4: required list<map<string,Val>> rows
+  1: required bool hasMore, // not used yet
+  2: required list<string> columns,
+  3: required list<map<string,Val>> rows
 }
 
 struct WriteResult
 {
-  1: required string error,
-  2: required i64 lastChangeRowid,
-  3: required i64 rowsChanged
+  1: required i64 lastChangeRowid,
+  2: required i64 rowsChanged
 }
 
 struct LoginResult

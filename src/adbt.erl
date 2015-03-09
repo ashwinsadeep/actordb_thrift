@@ -57,7 +57,7 @@ val(V) when V == true; V == false ->
 exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	Cols = tuple_to_list(Cols1),
 	Rows = [maps:from_list(lists:zip(Cols,[val(Val) || Val <- tuple_to_list(R)])) || R <- Rows1],
-	{reply,#'Result'{read = #'ReadResult'{columns = Cols, rows = Rows}}};
+	{reply,#'Result'{read = #'ReadResult'{hasMore = false,columns = Cols, rows = Rows}}};
 exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
 	{reply,#'Result'{write = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
 exec_res(Sql,{'EXIT',Exc}) ->
