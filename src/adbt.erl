@@ -49,7 +49,7 @@ val(V) when is_integer(V) ->
 val(V) when is_float(V) ->
 	#'Val'{real = V};
 val(undefined) ->
-	#'Val'{isnull = 1};
+	#'Val'{isnull = true};
 val(V) when V == true; V == false ->
 	#'Val'{bval = V}.
 

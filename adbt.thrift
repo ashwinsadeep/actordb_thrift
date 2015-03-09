@@ -8,11 +8,6 @@ namespace rb ActordbThrift
 
 const string VERSION = "1.0.0"
 
-enum Null
-{
-  IsNull = 1
-}
-
 union Val {
   1: i64 bigint,
   2: i32 integer,
@@ -20,7 +15,7 @@ union Val {
   4: double real,
   5: bool bval,
   6: string text,
-  7: Null isnull
+  7: bool isnull
 }
 
 
