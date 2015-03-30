@@ -42,8 +42,8 @@ struct LoginResult
 
 union Result
 {
-  1: ReadResult read,
-  2: WriteResult write
+  1: ReadResult rdRes,
+  2: WriteResult wrRes
 }
 
 enum ErrorCode {
@@ -62,7 +62,7 @@ exception InvalidRequestException {
 }
 
 service Actordb {
-  
+
   string protocolVersion(),
 
   LoginResult login(1: required string username, 2: required string password) throws (1:InvalidRequestException ire),
@@ -79,4 +79,3 @@ service Actordb {
   // all in sql: actor sometype(actorname) create; select * from mytab;
   Result exec_sql(1: required string sql) throws (1:InvalidRequestException ire)
 }
-
