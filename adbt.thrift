@@ -6,7 +6,7 @@ namespace php actordb
 namespace perl Actordb
 namespace rb ActordbThrift
 
-const string VERSION = "1.0.0"
+const string VERSION = "1.0.1"
 
 union Val {
   1: i64 bigint,
@@ -53,7 +53,8 @@ enum ErrorCode {
   InvalidType = 4,      // invalid characters
   NotPermitted = 5,     // accessing actor that user does not have permission for
   SqlError = 6,
-  Error = 7             // unknown error
+  ConsensusTimeout = 7, // cluster is unable to reach consensus, query was not executed
+  Error = 100           // unknown error
 }
 
 exception InvalidRequestException {

@@ -69,6 +69,8 @@ exec_res(_Sql,{unknown_actor_type,Type}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = [Type," is not a valid type."]});
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
+exec_res(_Sql,{error,consensus_timeout}) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = ""});
 exec_res(_Sql,{error,Err}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = atom_to_list(Err)});
 exec_res(_Sql,{ok,{error,E}}) ->
