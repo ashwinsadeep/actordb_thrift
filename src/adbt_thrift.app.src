@@ -1,4 +1,4 @@
-{application, actordb_thrift,
+{application, adbt_thrift,
  [
   {description, "ActorDB thrift server"},
   {vsn, "1"},
