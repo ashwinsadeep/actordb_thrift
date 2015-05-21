@@ -9,7 +9,7 @@
 %% API
 start(Port) ->
 	lager:info("Starting thrift on ~p",[Port]),
-    thrift_server:start_link(Port,actordb_thrift,?MODULE).
+    thrift_server:start_link(Port,adbt_thrift,?MODULE).
 
 
 handle_error(_Func,_Reason) ->
@@ -25,15 +25,27 @@ handle_function(login,{_U,_P}) ->
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
+handle_function(exec_single_prepare,{Actor,Type,Sql,Flags,BindingVals}) ->
+	Bp = backpressure(),
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
+handle_function(exec_multi_prepare,{Actors,Type,Sql,Flags,BindingVals}) ->
+	Bp = backpressure(),
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_all,{Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql)));
+handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals}) ->
+	Bp = backpressure(),
+	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql)));
+handle_function(exec_sql_prepare,{Sql,BindingVals}) ->
+	Bp = backpressure(),
+	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql,BindingVals)));
 handle_function(protocol_version,[]) ->
 	{reply,?ADBT_VERSION}.
 

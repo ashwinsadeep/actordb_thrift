@@ -21,6 +21,16 @@
                 'isnull' :: boolean()}).
 -type 'Val'() :: #'Val'{}.
 
+%% struct 'Prepare'
+
+-record('Prepare', {'int' :: integer(),
+                    'real' :: float(),
+                    'bin' :: string() | binary(),
+                    'text' :: string() | binary(),
+                    'rows' :: list(),
+                    'columns' :: list()}).
+-type 'Prepare'() :: #'Prepare'{}.
+
 %% struct 'ReadResult'
 
 -record('ReadResult', {'hasMore' :: boolean(),
