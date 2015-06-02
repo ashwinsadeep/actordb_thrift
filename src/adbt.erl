@@ -5,7 +5,7 @@
 -include_lib("adbt_types.hrl").
 -include_lib("adbt_constants.hrl").
 -compile([{parse_transform, lager_transform}]).
-
+-export ([prepare/1]).
 %% API
 start(Port) ->
 	lager:info("Starting thrift on ~p",[Port]),
@@ -25,26 +25,30 @@ handle_function(login,{_U,_P}) ->
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
-handle_function(exec_single_prepare,{Actor,Type,Sql,Flags,BindingVals}) ->
+handle_function(exec_single_prepare,{Actor,Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
+	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
-handle_function(exec_multi_prepare,{Actors,Type,Sql,Flags,BindingVals}) ->
+handle_function(exec_multi_prepare,{Actors,Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
+	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_all,{Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql)));
-handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals}) ->
+handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
+	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql)));
-handle_function(exec_sql_prepare,{Sql,BindingVals}) ->
+handle_function(exec_sql_prepare,{Sql, BindingVals0}) ->
 	Bp = backpressure(),
+	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql,BindingVals)));
 handle_function(protocol_version,[]) ->
 	{reply,?ADBT_VERSION}.
@@ -65,7 +69,6 @@ val(undefined) ->
 val(V) when V == true; V == false ->
 	#'Val'{bval = V}.
 
-
 exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	Cols = tuple_to_list(Cols1),
 	Rows = [maps:from_list(lists:zip(Cols,[val(Val) || Val <- tuple_to_list(R)])) || R <- Rows1],
@@ -83,8 +86,12 @@ exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,consensus_timeout}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = ""});
+exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = [butil:tolist(E)++" "||E<-tuple_to_list(Err)]});
 exec_res(_Sql,{error,Err}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = atom_to_list(Err)});
+exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
+	exec_res(_Sql,{error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
 	exec_res(_Sql,{error,E}).
 
@@ -103,3 +110,10 @@ backpressure() ->
 		ok ->
 			Bp
 	end.
+
+prepare(Prepare)->
+	prepare(Prepare,[]).
+prepare([H|T],Acc)->
+	prepare(T,[list_to_tuple([actordb_client:resp(Val)||Val<-[ table| H ] ])|Acc]);
+prepare([],Acc)->
+ 	[lists:reverse(Acc)].
