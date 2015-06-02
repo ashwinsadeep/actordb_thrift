@@ -19,15 +19,18 @@ union Val
   7: bool isnull
 }
 
+/*struct Proplist
+{
+  1: Val key,
+  2: Val val2
+}
+
 union Prepare
 {
-  1: i32 int,
-  2: double real,
-  3: binary bin,
-  4: string text,
-  5: list<map<string,Val>> rows,
-  6: list<string> columns
-}
+  1: list<map<string,Val>> maps, not used yet
+  2: list<Proplist> columns not used yet
+}*/
+
 
 struct ReadResult
 {
@@ -82,24 +85,24 @@ service Actordb {
   Result exec_single(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = []) throws (1:InvalidRequestException ire),
 
   // query for 1 actor of type with prepare argument
-  Result exec_single_prepare(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = [], 5: list<Prepare> bindingvals = []) throws (1:InvalidRequestException ire),
+  Result exec_single_prepare(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = [], 5: list<list<Val>> bindingvals = []) throws (1:InvalidRequestException ire),
 
   // query over some actors of type
   Result exec_multi(1: required list<string> actors, 2: required string actortype, 3: required string sql, 4: list<string> flags = []) throws (1:InvalidRequestException ire),
 
   // query over some actors of type prepare argument
-  Result exec_multi_prepare(1: required list<string> actors, 2: required string actortype, 3: required string sql, 4: list<string> flags = [], 5: list<Prepare> bindingvals = []) throws (1:InvalidRequestException ire),
+  Result exec_multi_prepare(1: required list<string> actors, 2: required string actortype, 3: required string sql, 4: list<string> flags = [], 5: list<list<Val>> bindingvals = []) throws (1:InvalidRequestException ire),
 
   // query over all actors for type
   Result exec_all(1: required string actortype, 2: required string sql, 3: list<string> flags = []) throws (1:InvalidRequestException ire),
 
   // query over all actors for type with prepare argument
-  Result exec_all_prepare(1: required string actortype, 2: required string sql, 3: list<string> flags = [], 4: list<Prepare> bindingvals = []) throws (1:InvalidRequestException ire),
+  Result exec_all_prepare(1: required string actortype, 2: required string sql, 3: list<string> flags = [], 4: list<list<Val>> bindingvals = []) throws (1:InvalidRequestException ire),
 
   // all in sql: actor sometype(actorname) create; select * from mytab;
   Result exec_sql(1: required string sql) throws (1:InvalidRequestException ire),
 
   // all in sql: actor sometype(actorname) create; select * from mytab; with prepare argument
-  Result exec_sql_prepare(1: required string sql, 2: list<Prepare> bindingvals = []) throws (1:InvalidRequestException ire)
+  Result exec_sql_prepare(1: required string sql, 2: list<list<Val>> bindingvals = []) throws (1:InvalidRequestException ire)
 
 }
