@@ -4,11 +4,9 @@
 -export([handle_error/2, handle_function/2]).
 -include_lib("adbt_types.hrl").
 -include_lib("adbt_constants.hrl").
--compile([{parse_transform, lager_transform}]).
 -export ([prepare/1]).
 %% API
 start(Port) ->
-	lager:info("Starting thrift on ~p",[Port]),
     thrift_server:start_link(Port,adbt_thrift,?MODULE).
 
 
@@ -80,7 +78,6 @@ exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
 	{reply,#'Result'{wrRes = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
 exec_res(Sql,{'EXIT',Exc}) ->
-	lager:error("Query exception: ~p for sql: ~p",[Exc,Sql]),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
 exec_res(_Sql,{error,empty_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_EMPTYACTORNAME, info = ""});
