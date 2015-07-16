@@ -15,11 +15,30 @@ handle_error(_Func,_Reason) ->
 
 % Process dictionary:
 % {pb,State} - backpressure state
-handle_function(login,{_U,_P}) ->
-	State = actordb_backpressure:start_caller(),
+handle_function(login,{U,P}) ->
+	State = actordb_backpressure:start_caller(U,P),
 	put(bp,State),
 	Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
 	{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}};
+handle_function(initialize,Servers) ->
+	{{'Server',Hosts,Groups}} = Servers,
+  {Hosts,[[{"name",Name},{"nodes",Nodes},{"type",Type}]||{'Group',Name,Nodes,Type}<-Groups]}
+ %
+ %
+ %  
+ %
+ %
+ %
+ %  {{'Server',[<<"127.0.0.1">>,<<"127.0.0.1">>],
+ %                   [{'Group',<<"ime">>,[],<<"cluster">>}]}}
+ %
+ %  {["testnd@127.0.0.1:44381","node2@192.168.1.2",
+ %  "node3@192.168.1.3:4381","node4@192.168.1.4:4382"],
+ % [[{"name","grp1"},{"nodes",["testnd"]},{"type","cluster"}],
+ %  [{"name","grp2"},{"nodes",["node2","node3","node4"]},{"type","cluster"}]]}
+ %
+
+  {reply,"ok"};
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
@@ -77,7 +96,7 @@ exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	{reply,#'Result'{rdRes = #'ReadResult'{hasMore = false,columns = Cols, rows = Rows}}};
 exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
 	{reply,#'Result'{wrRes = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
-exec_res(Sql,{'EXIT',Exc}) ->
+exec_res(_Sql,{'EXIT',_Exc}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
 exec_res(_Sql,{error,empty_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_EMPTYACTORNAME, info = ""});

@@ -19,18 +19,18 @@ union Val
   7: bool isnull
 }
 
-/*struct Proplist
+struct Server
 {
-  1: Val key,
-  2: Val val2
+  1: required list<string> servers,
+  2: required list<Group> groups
 }
 
-union Prepare
+struct Group
 {
-  1: list<map<string,Val>> maps, not used yet
-  2: list<Proplist> columns not used yet
-}*/
-
+  1: required string name,
+  2: required list<string> nodes,
+  3: required string type
+}
 
 struct ReadResult
 {
@@ -80,6 +80,8 @@ service Actordb {
   string protocolVersion(),
 
   LoginResult login(1: required string username, 2: required string password) throws (1:InvalidRequestException ire),
+
+  string initialize(1: Server servers) throws (1:InvalidRequestException ire),
 
   // query for 1 actor of type
   Result exec_single(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = []) throws (1:InvalidRequestException ire),

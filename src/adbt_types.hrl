@@ -21,15 +21,18 @@
                 'isnull' :: boolean()}).
 -type 'Val'() :: #'Val'{}.
 
-%% struct 'Prepare'
+%% struct 'Server'
 
--record('Prepare', {'int' :: integer(),
-                    'real' :: float(),
-                    'bin' :: string() | binary(),
-                    'text' :: string() | binary(),
-                    'rows' :: list(),
-                    'columns' :: list()}).
--type 'Prepare'() :: #'Prepare'{}.
+-record('Server', {'servers' = [] :: list(),
+                   'groups' = [] :: list()}).
+-type 'Server'() :: #'Server'{}.
+
+%% struct 'Group'
+
+-record('Group', {'name' :: string() | binary(),
+                  'nodes' = [] :: list(),
+                  'type' :: string() | binary()}).
+-type 'Group'() :: #'Group'{}.
 
 %% struct 'ReadResult'
 
