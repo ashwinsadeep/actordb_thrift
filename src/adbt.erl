@@ -19,19 +19,20 @@ handle_function(login,{U,P}) ->
 	State = actordb_backpressure:start_caller(U,P),
 	put(bp,State),
 	case actordb:types() of
-    schema_not_loaded ->
-      {reply,#'LoginResult'{success = true, readaccess = undefined, writeaccess = undefined}};
-    _ ->
-      Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
-      {reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}}
-  end;
+		schema_not_loaded ->
+			{reply,#'LoginResult'{success = true, readaccess = undefined, writeaccess = undefined}};
+		_ ->
+			Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
+			{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}}
+	end;
 handle_function(initialize,Servers) ->
 	{{'Server',Hosts,Groups}} = Servers,
-  {Nodes,Groups0} = {[butil:tolist(H)||H<-Hosts],[{butil:toatom(Name),[butil:tolist(N)||N<-Nodes],butil:toatom(Type),[]}||{'Group',Name,Nodes,Type}<-Groups]},
-  case catch actordb_cmd:init_state(Nodes,Groups0,[]) of
-    "ok" -> {reply,"ok"};
-    Err -> {reply,Err}
-  end;
+	{Nodes,Groups0} = {[butil:tolist(H)||H<-Hosts],
+	[{butil:toatom(Name),[butil:tolist(N)||N<-Nodes],butil:toatom(Type),[]}||{'Group',Name,Nodes,Type}<-Groups]},
+	case catch actordb_cmd:init_state(Nodes,Groups0,[]) of
+		"ok" -> {reply,"ok"};
+		Err -> {reply,Err}
+	end;
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
