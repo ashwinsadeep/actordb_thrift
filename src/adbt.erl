@@ -102,6 +102,16 @@ exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,consensus_timeout}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = ""});
+
+exec_res(_Sql,{error,local_node_missing}) ->	
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOCALNODEMISSING, info = "This node is not a part of supplied node list."});
+exec_res(_Sql,{error,missing_group_insert}) ->	
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGGROUPINSERT, info = "No valid groups for initialization."});
+exec_res(_Sql,{error,missing_nodes_insert}) ->	
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGNODESINSERT, info = "No valid nodes for initalization."});
+exec_res(_Sql,{error,missing_root_user}) ->	
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = "No valid root user for initialization"});
+
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = [butil:tolist(E)++" "||E<-tuple_to_list(Err)]});
 exec_res(_Sql,{error,Err}) ->
