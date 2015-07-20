@@ -54,6 +54,8 @@ enum ErrorCode {
   NotPermitted = 5,     // accessing actor that user does not have permission for
   SqlError = 6,
   ConsensusTimeout = 7, // cluster is unable to reach consensus, query was not executed
+  LocalNodeMissing = 8, // when creating a cluster, node where init was attempted was missing
+                        // from the node list.
   Error = 100           // unknown error
 }
 
