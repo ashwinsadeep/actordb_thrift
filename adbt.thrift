@@ -6,7 +6,7 @@ namespace php actordb
 namespace perl Actordb
 namespace rb ActordbThrift
 
-const string VERSION = "1.0.1"
+const string VERSION = "1.1.0"
 
 union Val
 {
@@ -17,19 +17,6 @@ union Val
   5: bool bval,
   6: string text,
   7: bool isnull
-}
-
-struct Server
-{
-  1: required list<string> servers,
-  2: required list<Group> groups
-}
-
-struct Group
-{
-  1: required string name,
-  2: required list<string> nodes,
-  3: required string type
 }
 
 struct ReadResult
@@ -79,9 +66,9 @@ service Actordb {
 
   string protocolVersion(),
 
-  LoginResult login(1: required string username, 2: required string password) throws (1:InvalidRequestException ire),
+  LoginResult login(1: required string username, 2: required string password) throws (1:InvalidRequestException ire), 
 
-  string initialize(1: Server servers) throws (1:InvalidRequestException ire),
+  Result initialize(1: required string sql) throws (1:InvalidRequestException ire),
 
   // query for 1 actor of type
   Result exec_single(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = []) throws (1:InvalidRequestException ire),
