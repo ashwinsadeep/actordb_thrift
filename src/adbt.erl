@@ -7,7 +7,7 @@
 -export ([prepare/1]).
 %% API
 start(Port) ->
-    thrift_server:start_link(Port,adbt_thrift,?MODULE).
+	thrift_server:start_link(Port,adbt_thrift,?MODULE).
 
 
 handle_error(_Func,_Reason) ->

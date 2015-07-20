@@ -68,7 +68,8 @@ service Actordb {
 
   LoginResult login(1: required string username, 2: required string password) throws (1:InvalidRequestException ire), 
 
-  Result initialize(1: required string sql) throws (1:InvalidRequestException ire),
+  // Initialize instance/cluster(s), create users
+  Result exec_config(1: required string sql) throws (1:InvalidRequestException ire),
 
   // query for 1 actor of type
   Result exec_single(1: required string actorname, 2: required string actortype, 3: required string sql, 4: list<string> flags = []) throws (1:InvalidRequestException ire),
