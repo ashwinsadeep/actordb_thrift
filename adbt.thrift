@@ -56,6 +56,9 @@ enum ErrorCode {
   ConsensusTimeout = 7, // cluster is unable to reach consensus, query was not executed
   LocalNodeMissing = 8, // when creating a cluster, node where init was attempted was missing
                         // from the node list.
+  MissingGroupInsert = 9,  // when creating a cluster, if no groups are specified
+  MissingNodesInsert = 10, // when creating a cluster, if no nodes are specified
+  MissingRootUser = 11, // when creating a cluster, if no root user was specified
   Error = 100           // unknown error
 }
 
