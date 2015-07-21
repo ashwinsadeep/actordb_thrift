@@ -59,6 +59,7 @@ enum ErrorCode {
   MissingGroupInsert = 9,  // when creating a cluster, if no groups are specified
   MissingNodesInsert = 10, // when creating a cluster, if no nodes are specified
   MissingRootUser = 11, // when creating a cluster, if no root user was specified
+  LoginFailed     = 12, // username and/or password was incorrect
   Error = 100           // unknown error
 }
 

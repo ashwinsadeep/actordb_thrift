@@ -15,15 +15,21 @@ handle_error(_Func,_Reason) ->
 
 % Process dictionary:
 % {pb,State} - backpressure state
+handle_function(login,{<<>>,<<>>}) ->
+	exec_res(ok,{error,invalid_login});
 handle_function(login,{U,P}) ->
-	State = actordb_backpressure:start_caller(U,P),
-	put(bp,State),
-	case actordb:types() of
-		schema_not_loaded ->
-			{reply,#'LoginResult'{success = true, readaccess = undefined, writeaccess = undefined}};
+	case catch actordb_backpressure:start_caller(U,P) of
+		State when element(1,State) == caller ->
+			put(bp,State),
+			case actordb:types() of
+				schema_not_loaded ->
+					{reply,#'LoginResult'{success = true, readaccess = undefined, writeaccess = undefined}};
+				_ ->
+					Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
+					{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}}
+			end;
 		_ ->
-			Types = [atom_to_binary(A,latin1) || A <- actordb:types()],
-			{reply,#'LoginResult'{success = true, readaccess = Types, writeaccess = Types}}
+			exec_res(ok,{error,invalid_login})
 	end;
 % handle_function(initialize,Servers) ->
 % 	{{'Server',Hosts,Groups}} = Servers,
@@ -103,11 +109,15 @@ exec_res(_Sql,{error,invalid_actor_name}) ->
 exec_res(_Sql,{error,consensus_timeout}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = ""});
 
-exec_res(_Sql,{error,local_node_missing}) ->	
+exec_res(_Sql,{error,no_permission}) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTPERMITTED, info = "User lacks permission for this query."});
+exec_res(_Sql,{error,invalid_login}) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOGINFAILED, info = "Username and/or password incorrect."});
+exec_res(_Sql,{error,local_node_missing}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOCALNODEMISSING, info = "This node is not a part of supplied node list."});
-exec_res(_Sql,{error,missing_group_insert}) ->	
+exec_res(_Sql,{error,missing_group_insert}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGGROUPINSERT, info = "No valid groups for initialization."});
-exec_res(_Sql,{error,missing_nodes_insert}) ->	
+exec_res(_Sql,{error,missing_nodes_insert}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGNODESINSERT, info = "No valid nodes for initalization."});
 exec_res(_Sql,{error,missing_root_user}) ->	
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = "No valid root user for initialization"});
