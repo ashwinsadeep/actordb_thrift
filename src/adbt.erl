@@ -40,7 +40,7 @@ handle_function(login,{U,P}) ->
 % 		Err -> {reply,Err}
 % 	end;
 handle_function(exec_config,{Sql}) ->
-	exec_res(Sql,(catch actordb_config:exec(get(bp),Sql)));
+	exec_res(Sql,{ok,(catch actordb_config:exec(get(bp),Sql))});
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
