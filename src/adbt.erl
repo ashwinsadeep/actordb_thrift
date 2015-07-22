@@ -88,6 +88,10 @@ val(undefined) ->
 val(V) when V == true; V == false ->
 	#'Val'{bval = V}.
 
+% exec_res(_Sql,{_WhatNow,ok}) ->
+% 	Cols = [],
+% 	Rows = [#{}],
+% 	{reply,#'Result'{rdRes = #'ReadResult'{hasMore = false,columns = Cols, rows = Rows}}};
 exec_res(_Sql,{_WhatNow,{ok,[{columns,[]},{rows,[]}]}}) ->
 	Cols = [],
 	Rows = [#{}],
@@ -125,7 +129,7 @@ exec_res(_Sql,{error,missing_root_user}) ->
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = [butil:tolist(E)++" "||E<-tuple_to_list(Err)]});
 exec_res(_Sql,{error,Err}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = atom_to_list(Err)});
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = butil:tolist(Err)});
 exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
 	exec_res(_Sql,{error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
