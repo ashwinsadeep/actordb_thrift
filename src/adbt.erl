@@ -15,9 +15,8 @@ handle_error(_Func,_Reason) ->
 
 % Process dictionary:
 % {pb,State} - backpressure state
-handle_function(login,{<<>>,<<>>}) ->
-	exec_res(ok,{error,invalid_login});
 handle_function(login,{U,P}) ->
+	put(adbt,true),
 	case catch actordb_backpressure:start_caller(U,P) of
 		State when element(1,State) == caller ->
 			put(bp,State),
@@ -31,16 +30,22 @@ handle_function(login,{U,P}) ->
 		_ ->
 			exec_res(ok,{error,invalid_login})
 	end;
-% handle_function(initialize,Servers) ->
-% 	{{'Server',Hosts,Groups}} = Servers,
-% 	{Nodes,Groups0} = {[butil:tolist(H)||H<-Hosts],
-% 	[{butil:toatom(Name),[butil:tolist(N)||N<-Nodes],butil:toatom(Type),[]}||{'Group',Name,Nodes,Type}<-Groups]},
-% 	case catch actordb_cmd:init_state(Nodes,Groups0,[]) of
-% 		"ok" -> {reply,"ok"};
-% 		Err -> {reply,Err}
-% 	end;
 handle_function(exec_config,{Sql}) ->
+	T = actordb:types(),
+	put(adbt,true),
+	case get(bp) of
+		undefined when T == schema_not_loaded ->
+			ok;
+		undefined ->
+			throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTLOGGEDIN, info = ""});
+		_ ->
+			ok
+	end,
 	exec_res(Sql,{ok,(catch actordb_config:exec(get(bp),Sql))});
+handle_function(exec_schema,{Sql}) ->
+	put(adbt,true),
+	Bp = backpressure(),
+	exec_res(Sql,{ok,(catch actordb_config:exec_schema(get(bp),Sql))});
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
