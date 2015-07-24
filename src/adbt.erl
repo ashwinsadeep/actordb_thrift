@@ -45,7 +45,8 @@ handle_function(exec_config,{Sql}) ->
 handle_function(exec_schema,{Sql}) ->
 	put(adbt,true),
 	Bp = backpressure(),
-	exec_res(Sql,{ok,(catch actordb_config:exec_schema(get(bp),Sql))});
+	actordb_backpressure:save(Bp,canempty,true),
+	exec_res(Sql,{ok,(catch actordb_config:exec_schema(Bp,Sql))});
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
