@@ -2,12 +2,12 @@
 -export([start/1]).
 % thrift callbacks
 -export([handle_error/2, handle_function/2]).
--include_lib("adbt_types.hrl").
--include_lib("adbt_constants.hrl").
+-include_lib("adbt/src/adbt_types.hrl").
+-include_lib("adbt/src/adbt_constants.hrl").
 -export ([prepare/1]).
 %% API
 start(Port) ->
-	thrift_server:start_link(Port,adbt_thrift,?MODULE).
+	thrift_server:start_link(Port,actordb_thrift,?MODULE).
 
 
 handle_error(_Func,_Reason) ->
