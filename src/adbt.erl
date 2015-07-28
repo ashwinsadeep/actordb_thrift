@@ -70,7 +70,8 @@ handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals0}) ->
 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
-	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql)));
+	R = (catch actordb:exec_bp(Bp,Sql)),
+	exec_res(Sql,R);
 handle_function(exec_sql_prepare,{Sql, BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
@@ -121,20 +122,27 @@ exec_res(_Sql,{error,consensus_timeout}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = I});
 
 exec_res(_Sql,{error,no_permission}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTPERMITTED, info = "User lacks permission for this query."});
+	I = "User lacks permission for this query.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTPERMITTED, info = I});
 exec_res(_Sql,{error,invalid_login}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOGINFAILED, info = "Username and/or password incorrect."});
+	I = "Username and/or password incorrect.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOGINFAILED, info = I});
 exec_res(_Sql,{error,local_node_missing}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOCALNODEMISSING, info = "This node is not a part of supplied node list."});
+	I = "This node is not a part of supplied node list.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOCALNODEMISSING, info = I});
 exec_res(_Sql,{error,missing_group_insert}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGGROUPINSERT, info = "No valid groups for initialization."});
+	I = "No valid groups for initialization.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGGROUPINSERT, info = I});
 exec_res(_Sql,{error,missing_nodes_insert}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGNODESINSERT, info = "No valid nodes for initalization."});
+	I = "No valid nodes for initalization.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGNODESINSERT, info = I});
 exec_res(_Sql,{error,missing_root_user}) ->	
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = "No valid root user for initialization"});
+	I = "No valid root user for initialization",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = I});
 
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = [butil:tolist(E)++" "||E<-tuple_to_list(Err)]});
+	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = I});
 exec_res(_Sql,{error,Err}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = butil:tolist(Err)});
 exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
