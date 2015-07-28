@@ -117,7 +117,8 @@ exec_res(_Sql,{unknown_actor_type,Type}) ->
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,consensus_timeout}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = ""});
+	I = "Cluster can not reach consensus at this time. Query was not executed.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = I});
 
 exec_res(_Sql,{error,no_permission}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTPERMITTED, info = "User lacks permission for this query."});
