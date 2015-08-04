@@ -44,9 +44,14 @@ handle_function(exec_config,{Sql}) ->
 	exec_res(Sql,{ok,(catch actordb_config:exec(get(bp),Sql))});
 handle_function(exec_schema,{Sql}) ->
 	put(adbt,true),
-	Bp = backpressure(),
-	actordb_backpressure:save(Bp,canempty,true),
-	exec_res(Sql,{ok,(catch actordb_config:exec_schema(Bp,Sql))});
+	case actordb:types() of
+		schema_not_loaded ->
+			exec_res(Sql,{error,not_initialized});
+		_ ->
+			Bp = backpressure(),
+			actordb_backpressure:save(Bp,canempty,true),
+			exec_res(Sql,{ok,(catch actordb_config:exec_schema(Bp,Sql))})
+	end;
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
@@ -116,7 +121,12 @@ exec_res(_Sql,{'EXIT',_Exc}) ->
 exec_res(_Sql,{error,empty_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_EMPTYACTORNAME, info = ""});
 exec_res(_Sql,{unknown_actor_type,Type}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = [Type," is not a valid type."]});
+	case actordb:types() of
+		schema_not_loaded ->
+			exec_res(_Sql,{error,not_initialized});
+		_ ->
+			throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = [Type," is not a valid type."]})
+	end;
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,consensus_timeout}) ->
@@ -141,6 +151,9 @@ exec_res(_Sql,{error,missing_nodes_insert}) ->
 exec_res(_Sql,{error,missing_root_user}) ->	
 	I = "No valid root user for initialization",
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = I});
+exec_res(_Sql,{error,not_initialized}) ->
+	I = "ActorDB needs to be initialized before this query can be executed.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTINITIALIZED, info = I});
 
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
