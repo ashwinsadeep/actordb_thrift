@@ -17,7 +17,13 @@ handle_error(_Func,_Reason) ->
 % {pb,State} - backpressure state
 handle_function(login,{U,P}) ->
 	put(adbt,true),
-	case catch actordb_backpressure:start_caller(U,P) of
+	case get(salt) of
+		undefined ->
+			put(salt,<<>>);
+		_ ->
+			ok
+	end,
+	case catch actordb_backpressure:start_caller(U,P,get(salt)) of
 		State when element(1,State) == caller ->
 			put(bp,State),
 			case actordb:types() of
@@ -30,6 +36,9 @@ handle_function(login,{U,P}) ->
 		_ ->
 			exec_res(ok,{error,invalid_login})
 	end;
+handle_function(salt,_) ->
+	put(salt,crypto:rand_bytes(20)),
+	{reply,get(salt)};
 handle_function(exec_config,{Sql}) ->
 	T = actordb:types(),
 	put(adbt,true),
