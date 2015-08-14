@@ -64,29 +64,29 @@ handle_function(exec_schema,{Sql}) ->
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
-handle_function(exec_single_prepare,{Actor,Type,Sql,Flags,BindingVals0}) ->
+handle_function(exec_single_param,{Actor,Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
-handle_function(exec_multi_prepare,{Actors,Type,Sql,Flags,BindingVals0}) ->
-	Bp = backpressure(),
-	BindingVals = prepare(BindingVals0),
-	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql,BindingVals)));
+% handle_function(exec_multi_prepare,{Actors,Type,Sql,Flags,BindingVals0}) ->
+% 	Bp = backpressure(),
+% 	BindingVals = prepare(BindingVals0),
+% 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_all,{Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql)));
-handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals0}) ->
-	Bp = backpressure(),
-	BindingVals = prepare(BindingVals0),
-	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql,BindingVals)));
+% handle_function(exec_all_prepare,{Type,Sql,Flags,BindingVals0}) ->
+% 	Bp = backpressure(),
+% 	BindingVals = prepare(BindingVals0),
+% 	exec_res(Sql,(catch actordb:exec_bp(Bp,$*,Type,flags(Flags),Sql,BindingVals)));
 handle_function(exec_sql,{Sql}) ->
 	Bp = backpressure(),
 	R = (catch actordb:exec_bp(Bp,Sql)),
 	exec_res(Sql,R);
-handle_function(exec_sql_prepare,{Sql, BindingVals0}) ->
+handle_function(exec_sql_param,{Sql, BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql,BindingVals)));
