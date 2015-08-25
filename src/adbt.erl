@@ -121,7 +121,7 @@ exec_res(_Sql,{_WhatNow,{ok,[[_,_] = R|_]}}) ->
 	exec_res(_Sql,{_WhatNow,{ok,R}});
 exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	Cols = tuple_to_list(Cols1),
-	Rows = [maps:from_list(lists:zip(Cols,[val(Val) || Val <- tuple_to_list(R)])) || R <- Rows1],
+	Rows = [maps:from_list(lists:zip(Cols,[val(Val) || Val <- tuple_to_list(R)])) || R <- lists:reverse(Rows1)],
 	{reply,#'Result'{rdRes = #'ReadResult'{hasMore = false,columns = Cols, rows = Rows}}};
 exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
 	{reply,#'Result'{wrRes = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
