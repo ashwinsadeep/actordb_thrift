@@ -139,8 +139,11 @@ exec_res(_Sql,{unknown_actor_type,Type}) ->
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
 exec_res(_Sql,{error,consensus_timeout}) ->
-	I = "Cluster can not reach consensus at this time. Query was not executed.",
+	I = "Replication timeout. Write may or may not be replicated successfully.",
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = I});
+exec_res(_Sql,{error,consensus_impossible_atm}) ->
+	I = "Cluster can not reach consensus at this time. Query was not executed.",
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSIMPOSSIBLEATM, info = I});
 
 exec_res(_Sql,{error,no_permission}) ->
 	I = "User lacks permission for this query.",
