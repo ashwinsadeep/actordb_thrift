@@ -167,6 +167,11 @@ exec_res(_Sql,{error,not_initialized}) ->
 	I = "ActorDB needs to be initialized before this query can be executed.",
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTINITIALIZED, info = I});
 
+exec_res(_Sql,{error,E}) when is_tuple(E), element(2,E) == "not_iolist" ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, 
+		info = "not_iolist, are you using {{...}} in a single actor call?"});
+exec_res(_Sql,{error,E}) when is_tuple(E), is_list(element(2,E)) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = element(2,E)});
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = I});
@@ -175,7 +180,9 @@ exec_res(_Sql,{error,Err}) ->
 exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
 	exec_res(_Sql,{error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
-	exec_res(_Sql,{error,E}).
+	exec_res(_Sql,{error,E});
+exec_res(_,_Err) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = "Execute exception."}).
 
 backpressure() ->
 	Bp = get(bp),
