@@ -125,6 +125,8 @@ exec_res(_Sql,{_WhatNow,{ok,[{columns,Cols1},{rows,Rows1}]}}) ->
 	{reply,#'Result'{rdRes = #'ReadResult'{hasMore = false,columns = Cols, rows = Rows}}};
 exec_res(_Sql,{_WhatNow,{ok,{changes,LastId,NChanged}}}) ->
 	{reply,#'Result'{wrRes = #'WriteResult'{lastChangeRowid = LastId, rowsChanged = NChanged}}};
+exec_res(_Sql,{_WhatNow,{ok,[{changes,_,_} = H|_]}}) ->
+	exec_res(_Sql,{_WhatNow,{ok,H}});
 exec_res(_Sql,{'EXIT',_Exc}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
 exec_res(_Sql,{error,empty_actor_name}) ->
