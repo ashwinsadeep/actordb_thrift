@@ -181,7 +181,8 @@ exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
 	exec_res(_Sql,{error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
 	exec_res(_Sql,{error,E});
-exec_res(_,_Err) ->
+exec_res(_,Err) ->
+	error_logger:format("Execute exception: ~p~n",[Err]),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = "Execute exception."}).
 
 backpressure() ->
