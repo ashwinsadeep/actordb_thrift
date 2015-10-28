@@ -90,6 +90,38 @@ handle_function(exec_sql_param,{Sql, BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql,BindingVals)));
+handle_function(actor_types,_) ->
+	case actordb:types() of
+		schema_not_loaded ->
+			{reply,[]};
+		L ->
+			{reply,[atom_to_binary(A,utf8) || A <- L]}
+	end;
+handle_function(actor_tables,{Type}) ->
+	case catch actordb:tables(binary_to_existing_atom(Type,utf8)) of
+		schema_not_loaded ->
+			{reply,[]};
+		L when is_list(L) ->
+			{reply,L};
+		_ ->
+			{reply,[]}
+	end;
+handle_function(actor_columns,{Type,Table}) ->
+	case catch actordb:columns(Type,Table) of
+		schema_not_loaded ->
+			{reply,#{}};
+		L when is_list(L) ->
+			{reply,maps:from_list(L)};
+		_ ->
+			{reply,#{}}
+	end;
+handle_function(uniqid,_) ->
+	case catch actordb_idgen:getid() of
+		{ok,N} when is_integer(N) ->
+			{reply,N};
+		_E ->
+			{reply,0}
+	end;
 handle_function(protocol_version,[]) ->
 	{reply,?ADBT_VERSION}.
 
