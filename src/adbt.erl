@@ -200,6 +200,9 @@ exec_res(_Sql,{error,missing_root_user}) ->
 exec_res(_Sql,{error,not_initialized}) ->
 	I = "ActorDB needs to be initialized before this query can be executed.",
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTINITIALIZED, info = I});
+exec_res(_Sql,{error,nocreate}) ->
+	I = <<"Query without create flag was attempted on an actor which does not exist.">>,
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOCREATE, info = I});
 
 exec_res(_Sql,{error,E}) when is_tuple(E), element(2,E) == "not_iolist" ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, 
