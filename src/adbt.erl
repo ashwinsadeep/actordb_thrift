@@ -130,16 +130,20 @@ flags([H|T]) ->
 flags([]) ->
 	[].
 
+val({blob,V}) ->
+	#'Val'{bin = V};
+val(undefined) ->
+	#'Val'{isnull = true};
+val(true) ->
+	#'Val'{bval = true};
+val(false) ->
+	#'Val'{bval = false};
 val(V) when is_binary(V); is_list(V) ->
 	#'Val'{text = V};
 val(V) when is_integer(V) ->
 	#'Val'{bigint = V};
 val(V) when is_float(V) ->
-	#'Val'{real = V};
-val(undefined) ->
-	#'Val'{isnull = true};
-val(V) when V == true; V == false ->
-	#'Val'{bval = V}.
+	#'Val'{real = V}.
 
 % exec_res(_Sql,{_WhatNow,ok}) ->
 % 	Cols = [],
