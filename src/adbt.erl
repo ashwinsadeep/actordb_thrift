@@ -131,7 +131,7 @@ flags([]) ->
 	[].
 
 val({blob,V}) ->
-	#'Val'{bin = V};
+	#'Val'{blob = V};
 val(undefined) ->
 	#'Val'{isnull = true};
 val(true) ->
