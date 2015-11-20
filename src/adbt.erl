@@ -10,7 +10,8 @@ start(Port) ->
 	thrift_server:start_link(Port,actordb_thrift,?MODULE).
 
 
-handle_error(_Func,_Reason) ->
+handle_error(Func,Reason) ->
+	error_logger:format("Thrift error: func=~p, reason=~p~n",[Func, Reason]),
 	ok.
 
 % Process dictionary:
