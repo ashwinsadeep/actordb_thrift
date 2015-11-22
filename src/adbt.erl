@@ -217,7 +217,7 @@ exec_res(_Sql,{error,nocreate}) ->
 exec_res(_Sql,{error,E}) when is_tuple(E), element(2,E) == "not_iolist" ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, 
 		info = "not_iolist, are you using {{...}} in a single actor call?"});
-exec_res(_Sql,{error,E}) when is_tuple(E), is_list(element(2,E)) ->
+exec_res(_Sql,{error,E}) when is_tuple(E), is_list(element(2,E)), element(2,E) /= [] ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = element(2,E)});
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
