@@ -214,18 +214,20 @@ exec_res(_Sql,{error,nocreate}) ->
 	I = <<"Query without create flag was attempted on an actor which does not exist.">>,
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOCREATE, info = I});
 
-exec_res(_Sql,{error,E}) when is_tuple(E), element(2,E) == "not_iolist" ->
+exec_res(_Sql,{sql_error,"not_iolist"}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, 
 		info = "not_iolist, are you using {{...}} in a single actor call?"});
-exec_res(_Sql,{error,E}) when is_tuple(E), is_list(element(2,E)), element(2,E) /= [] ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = element(2,E)});
+exec_res(_Sql,{sql_error,E}) when is_list(E); is_binary(E) ->
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = E});
+exec_res(_Sql,{sql_error,E}) when is_tuple(E) ->
+		exec_res(_Sql,{error,E});
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
 	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = I});
 exec_res(_Sql,{error,Err}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = butil:tolist(Err)});
-exec_res(_Sql,{ok,{sql_error,E,_Description}}) ->
-	exec_res(_Sql,{error,E});
+exec_res(_Sql,{ok,{sql_error,E}}) ->
+	exec_res(_Sql,{sql_error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
 	exec_res(_Sql,{error,E});
 exec_res(_,Err) ->
