@@ -140,6 +140,8 @@ val(true) ->
 	#'Val'{bval = true};
 val(false) ->
 	#'Val'{bval = false};
+val(V) when is_float(V) ->
+	#'Val'{real = V};
 val(V) when is_binary(V); is_list(V) ->
 	#'Val'{text = V};
 val(V) when V >= -32768, V =< 32767 ->
@@ -147,9 +149,7 @@ val(V) when V >= -32768, V =< 32767 ->
 val(V) when V >= -2147483648, V =< 2147483647 ->
 	#'Val'{integer = V};
 val(V) when is_integer(V) ->
-	#'Val'{bigint = V};
-val(V) when is_float(V) ->
-	#'Val'{real = V}.
+	#'Val'{bigint = V}.
 
 % exec_res(_Sql,{_WhatNow,ok}) ->
 % 	Cols = [],
