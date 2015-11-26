@@ -249,10 +249,27 @@ backpressure() ->
 		ok ->
 			Bp
 	end.
-
-prepare(Prepare)->
-	prepare(Prepare,[]).
-prepare([H|T],Acc)->
-	prepare(T,[list_to_tuple([actordb_client:resp(Val)||Val<-[ table| H ] ])|Acc]);
-prepare([],Acc)->
- 	[lists:reverse(Acc)].
+prepare(L) ->
+	[prepare1(L)].
+prepare1([L|LT]) ->
+	[prepare_line(L)|prepare1(LT)];
+prepare1([]) ->
+	[].
+prepare_line(L) ->
+	[prepval(V) || V <- L].
+prepval(#'Val'{bigint = V}) when is_integer(V) ->
+	V;
+prepval(#'Val'{integer = V}) when is_integer(V) ->
+	V;
+prepval(#'Val'{smallint = V}) when is_integer(V) ->
+	V;
+prepval(#'Val'{real = V}) when is_float(V) ->
+	V;
+prepval(#'Val'{bval = V}) when V == true; V == false ->
+	V;
+prepval(#'Val'{text = V}) when is_binary(V); is_list(V) ->
+	V;
+prepval(#'Val'{isnull = true}) ->
+	undefined;
+prepval(#'Val'{blob = V})  when is_binary(V); is_list(V) ->
+	{blob,V}.
