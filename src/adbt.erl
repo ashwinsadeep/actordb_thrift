@@ -69,7 +69,8 @@ handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 handle_function(exec_single_param,{Actor,Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
-	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)));
+	R = (catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)),
+	exec_res(Sql,R);
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
@@ -124,7 +125,7 @@ handle_function(uniqid,_) ->
 		_E ->
 			{reply,0}
 	end;
-handle_function(protocol_version,[]) ->
+handle_function(protocolVersion,_) ->
 	{reply,?ADBT_VERSION}.
 
 flags([H|T]) ->
