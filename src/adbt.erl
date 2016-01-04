@@ -7,7 +7,34 @@
 -export ([prepare/1]).
 %% API
 start(Port) ->
-	thrift_server:start_link(Port,actordb_thrift,?MODULE).
+	case application:get_env(thrift, network_interface) of
+		{ok, Value} ->
+			case inet:parse_address(Value) of
+				{ok, IPAddress} ->
+					ok;
+				_ ->
+					{ok, {hostent, _, [], inet, _, [IPAddress]}} = inet:gethostbyname(Value)
+			end;
+		_ ->
+			IPAddress = false
+	end,
+	{ok, Addresses} = inet:getif(),
+	case lists:keyfind(IPAddress, 1, Addresses) of
+		false ->
+			Opts = [];
+		_ ->
+			Opts = [{ip,IPAddress}]
+	end,
+	case application:get_env(actordb_core,client_inactivity_timeout) of
+		{ok,RTimeout} when RTimeout > 0 ->
+			ok;
+		_ ->
+			RTimeout = infinity
+	end,
+	thrift_socket_server:start([{handler, ?MODULE},
+		{service, actordb_thrift},
+		{socket_opts,[{recv_timeout, RTimeout}]},
+		{port, Port}|Opts]).
 
 handle_error(_,closed) ->
 	ok;
@@ -65,7 +92,8 @@ handle_function(exec_schema,{Sql}) ->
 	end;
 handle_function(exec_single,{Actor,Type,Sql,Flags}) ->
 	Bp = backpressure(),
-	exec_res(Sql,(catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)));
+	R = (catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql)),
+	exec_res(Sql,R);
 handle_function(exec_single_param,{Actor,Type,Sql,Flags,BindingVals0}) ->
 	Bp = backpressure(),
 	BindingVals = prepare(BindingVals0),
