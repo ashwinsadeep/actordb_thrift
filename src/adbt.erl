@@ -38,6 +38,8 @@ start(Port) ->
 
 handle_error(_,closed) ->
 	ok;
+handle_error(_,timeout) ->
+	ok;
 handle_error(Func,Reason) ->
 	error_logger:format("Thrift error: func=~p, reason=~p~n",[Func, Reason]),
 	ok.
