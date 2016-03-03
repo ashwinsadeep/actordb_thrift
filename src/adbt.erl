@@ -204,59 +204,59 @@ exec_res(_Sql,{'EXIT',_Exc}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = ""});
 exec_res(_Sql,{error,empty_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_EMPTYACTORNAME, info = ""});
-exec_res(_Sql,{unknown_actor_type,Type}) ->
+exec_res(_Sql,{unknown_actor_type,_Type} = E) ->
 	case actordb:types() of
 		schema_not_loaded ->
 			exec_res(_Sql,{error,not_initialized});
 		_ ->
-			throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = [Type," is not a valid type."]})
+			throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDTYPE, info = actordb_err_desc:desc(E)})
 	end;
 exec_res(_Sql,{error,invalid_actor_name}) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_INVALIDACTORNAME, info = ""});
-exec_res(_Sql,{error,consensus_timeout}) ->
-	I = "Replication timeout. Write may or may not be replicated successfully.",
+exec_res(_Sql,{error,consensus_timeout} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSTIMEOUT, info = I});
-exec_res(_Sql,{error,consensus_impossible_atm}) ->
-	I = "Cluster can not reach consensus at this time. Query was not executed.",
+exec_res(_Sql,{error,consensus_impossible_atm} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_CONSENSUSIMPOSSIBLEATM, info = I});
 
-exec_res(_Sql,{error,no_permission}) ->
-	I = "User lacks permission for this query.",
+exec_res(_Sql,{error,no_permission} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTPERMITTED, info = I});
-exec_res(_Sql,{error,invalid_login}) ->
-	I = "Username and/or password incorrect.",
+exec_res(_Sql,{error,invalid_login} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOGINFAILED, info = I});
-exec_res(_Sql,{error,local_node_missing}) ->
-	I = "This node is not a part of supplied node list.",
+exec_res(_Sql,{error,local_node_missing} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_LOCALNODEMISSING, info = I});
-exec_res(_Sql,{error,missing_group_insert}) ->
-	I = "No valid groups for initialization.",
+exec_res(_Sql,{error,missing_group_insert} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGGROUPINSERT, info = I});
-exec_res(_Sql,{error,missing_nodes_insert}) ->
-	I = "No valid nodes for initalization.",
+exec_res(_Sql,{error,missing_nodes_insert} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGNODESINSERT, info = I});
-exec_res(_Sql,{error,missing_root_user}) ->	
-	I = "No valid root user for initialization",
+exec_res(_Sql,{error,missing_root_user} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_MISSINGROOTUSER, info = I});
-exec_res(_Sql,{error,not_initialized}) ->
-	I = "ActorDB needs to be initialized before this query can be executed.",
+exec_res(_Sql,{error,not_initialized} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTINITIALIZED, info = I});
-exec_res(_Sql,{error,nocreate}) ->
-	I = <<"Query without create flag was attempted on an actor which does not exist.">>,
+exec_res(_Sql,{error,nocreate} = E) ->
+	I = actordb_err_desc:desc(E),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOCREATE, info = I});
 
-exec_res(_Sql,{sql_error,"not_iolist"}) ->
+exec_res(_Sql,{sql_error,"not_iolist"} = E) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, 
-		info = "not_iolist, are you using {{...}} in a single actor call?"});
+		info = actordb_err_desc:desc(E)});
 exec_res(_Sql,{sql_error,E}) when is_list(E); is_binary(E) ->
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = E});
 exec_res(_Sql,{sql_error,E}) when is_tuple(E) ->
 		exec_res(_Sql,{error,E});
 exec_res(_Sql,{error,Err}) when is_tuple(Err) ->
-	I = iolist_to_binary([butil:tolist(E)++" "||E<-tuple_to_list(Err)]),
+	I = actordb_err_desc:desc(Err),
 	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_SQLERROR, info = I});
 exec_res(_Sql,{error,Err}) ->
-	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = butil:tolist(Err)});
+	throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_ERROR, info = actordb_err_desc:desc(Err)});
 exec_res(_Sql,{ok,{sql_error,E}}) ->
 	exec_res(_Sql,{sql_error,E});
 exec_res(_Sql,{ok,{error,E}}) ->
