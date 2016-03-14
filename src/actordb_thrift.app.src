@@ -1,7 +1,7 @@
 {application, actordb_thrift,
  [
   {description, "ActorDB thrift server"},
-  {vsn, "0.10.14"},
+  {vsn, "0.10.16"},
   {modules, [
              adbt
             ]},
