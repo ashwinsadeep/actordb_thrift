@@ -124,6 +124,7 @@ handle_function(exec_sql_param,{Sql, BindingVals0}) ->
 	BindingVals = prepare(BindingVals0),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Sql,BindingVals)));
 handle_function(actor_types,_) ->
+	backpressure(),
 	case actordb:types() of
 		schema_not_loaded ->
 			{reply,[]};
@@ -131,6 +132,7 @@ handle_function(actor_types,_) ->
 			{reply,[atom_to_binary(A,utf8) || A <- L]}
 	end;
 handle_function(actor_tables,{Type}) ->
+	backpressure(),
 	case catch actordb:tables(binary_to_existing_atom(Type,utf8)) of
 		schema_not_loaded ->
 			{reply,[]};
@@ -140,6 +142,7 @@ handle_function(actor_tables,{Type}) ->
 			{reply,[]}
 	end;
 handle_function(actor_columns,{Type,Table}) ->
+	backpressure(),
 	case catch actordb:columns(Type,Table) of
 		schema_not_loaded ->
 			{reply,#{}};
@@ -149,6 +152,7 @@ handle_function(actor_columns,{Type,Table}) ->
 			{reply,#{}}
 	end;
 handle_function(uniqid,_) ->
+	backpressure(),
 	case catch actordb_idgen:getid() of
 		{ok,N} when is_integer(N) ->
 			{reply,N};
