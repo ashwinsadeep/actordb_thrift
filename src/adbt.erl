@@ -21,9 +21,9 @@ start(Port) ->
 	{ok, Addresses} = inet:getif(),
 	case lists:keyfind(IPAddress, 1, Addresses) of
 		false ->
-			Opts = [];
+			IPAddr = [];
 		_ ->
-			Opts = [{ip,IPAddress}]
+			IPAddr = [{ip,IPAddress}]
 	end,
 	case application:get_env(actordb_core,client_inactivity_timeout) of
 		{ok,RTimeout} when RTimeout > 0 ->
@@ -31,10 +31,16 @@ start(Port) ->
 		_ ->
 			RTimeout = infinity
 	end,
+	case application:get_env(actordb_core, thrift_framed) of
+		{ok,FramedVal} when FramedVal == true; FramedVal == false ->
+			Framed = [{framed, FramedVal}];
+		_ ->
+			Framed = []
+	end,
 	thrift_socket_server:start([{handler, ?MODULE},
 		{service, actordb_thrift},
 		{socket_opts,[{recv_timeout, RTimeout}]},
-		{port, Port}|Opts]).
+		{port, Port}] ++ IPAddr ++ Framed).
 
 handle_error(_,closed) ->
 	ok;
@@ -68,7 +74,7 @@ handle_function(login,{U,P}) ->
 			exec_res(ok,{error,invalid_login})
 	end;
 handle_function(salt,_) ->
-	put(salt,crypto:rand_bytes(20)),
+	put(salt,crypto:strong_rand_bytes(20)),
 	{reply,get(salt)};
 handle_function(exec_config,{Sql}) ->
 	T = actordb:types(),
