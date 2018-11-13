@@ -107,6 +107,11 @@ handle_function(exec_single_param,{Actor,Type,Sql,Flags,BindingVals0}) ->
 	BindingVals = prepare(BindingVals0),
 	R = (catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)),
 	exec_res(Sql,R);
+handle_function(exec_single_batch_param,{Actor,Type,Sql,Flags,BindingVals0}) ->
+	Bp = backpressure(),
+	BindingVals = prepare(BindingVals0),
+	R = (catch actordb:exec_bp(Bp,Actor,Type,flags(Flags),Sql,BindingVals)),
+	exec_res_batch(Sql,R);
 handle_function(exec_multi,{Actors,Type,Sql,Flags}) ->
 	Bp = backpressure(),
 	exec_res(Sql,(catch actordb:exec_bp(Bp,Actors,Type,flags(Flags),Sql)));
@@ -191,6 +196,28 @@ val(V) when is_binary(V); is_list(V) ->
 % 	#'Val'{integer = V};
 val(V) when is_integer(V) ->
 	#'Val'{bigint = V}.
+
+% Create reply for batch SQL queries
+parse_query_res({reply, Result}) when Result#'Result'.rdRes /= undefined ->
+	#'QueryResult'{rdRes = Result#'Result'.rdRes};
+parse_query_res({reply, Result}) when Result#'Result'.wrRes /= undefined ->
+	#'QueryResult'{wrRes = Result#'Result'.wrRes}.
+% For each ResultSet, evaluate exec_res to parse the ResultSet and wrap it in a QueryResult
+parse_query_res(_Sql, {_WhatNow, {ok, Rset}}) ->
+	ExecResReply = exec_res(_Sql, {_WhatNow, {ok, Rset}}),
+	parse_query_res(ExecResReply).
+% In case the batch request had only one query, the response object is going to have only 1 ResultSet.
+exec_res_batch(_Sql, {_WhatNow, {ok, [{columns, Cols}, {rows, Rows}]}}) ->
+	QueryResults = [parse_query_res(_Sql, {_WhatNow, {ok, [{columns, Cols}, {rows, Rows}]}})],
+	{reply, #'Result'{batchRes = QueryResults}};
+% In case the batch request had only more than 1 query, the response object is going to have multiple ResultSets.
+% Create a reply for each ResultSet
+exec_res_batch(_Sql, {_WhatNow, {ok, ResultSets}}) ->
+	QueryResults = [parse_query_res(_Sql, {_WhatNow, {ok, Rset}}) || Rset <- lists:reverse(ResultSets)],
+	{reply, #'Result'{batchRes = QueryResults}};
+% In case there is an error, fall back to exec_res to handle the error
+exec_res_batch(_Sql, Unknown) ->
+	exec_res(_Sql, Unknown).
 
 % exec_res(_Sql,{_WhatNow,ok}) ->
 % 	Cols = [],
@@ -291,7 +318,7 @@ backpressure() ->
 			Bp
 	end.
 prepare(L) ->
-	[prepare1(L)].
+	[prepare1(M) || M <- L].
 prepare1([L|LT]) ->
 	[prepare_line(L)|prepare1(LT)];
 prepare1([]) ->
