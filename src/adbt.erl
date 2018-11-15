@@ -306,7 +306,9 @@ backpressure() ->
 	Bp = get(bp),
 	case Bp of
 		undefined ->
-			throw(#'InvalidRequestException'{code = ?ADBT_ERRORCODE_NOTLOGGEDIN, info = ""});
+			U = list_to_binary("myuser"),
+			P = list_to_binary("mypass"),
+			handle_function(login, {U, P});
 		_ ->
 			ok
 	end,
