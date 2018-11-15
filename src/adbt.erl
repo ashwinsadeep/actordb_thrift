@@ -309,7 +309,12 @@ backpressure() ->
 		undefined ->
 			U = list_to_binary("myuser"),
 			P = list_to_binary("mypass"),
-			handle_function(login, {U, P});
+			case catch actordb_backpressure:start_caller(U,P,get(salt)) of
+				State when element(1,State) == caller ->
+					put(bp,State);
+				_ ->
+					throw(invalid_login)
+			end;
 		_ ->
 			ok
 	end,
